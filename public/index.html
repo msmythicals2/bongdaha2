@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1400" />
+  <title>Bongdaha - Real-Time Football Livescore (Dark)</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+  <!-- ================= HEADER (KEEP) ================= -->
+  <header class="site-header">
+    <div class="max-w-[1400px] mx-auto flex items-center h-full px-4 justify-between">
+      <div class="flex items-center gap-8">
+        <h1 class="text-2xl font-black italic tracking-tighter text-white">
+          BONGDA<span class="text-[#00e676]">HA</span>
+        </h1>
+
+        <nav class="hidden md:flex gap-8 text-xs font-bold uppercase tracking-widest">
+          <a href="#" class="text-[#00e676]">Football</a>
+          <a href="#" class="text-gray-500 hover:text-white transition-colors">News</a>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-6 text-sm">
+        <div id="clock" class="text-gray-500 font-mono text-xs"></div>
+        <div class="h-4 w-[1px] bg-gray-800"></div>
+        <i class="fa-solid fa-magnifying-glass cursor-pointer text-gray-500 hover:text-white"></i>
+        <i class="fa-solid fa-user cursor-pointer text-gray-500 hover:text-white"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN APP (KEEP) ================= -->
+  <div class="app-container">
+    <!-- ===== LEFT SIDEBAR ===== -->
+    <aside>
+      <div class="sidebar-section p-4">
+        <h3 class="section-title">Pinned Leagues</h3>
+        <ul id="pinned-leagues" class="space-y-1"></ul>
+      </div>
+
+      <div class="sidebar-section p-4">
+        <h3 class="section-title">Top Countries</h3>
+        <div id="countries-list" class="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar"></div>
+      </div>
+    </aside>
+
+    <!-- ===== CENTER CONTENT ===== -->
+    <main>
+      <div class="main-card">
+        <!-- Tabs -->
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="all">ALL</button>
+
+          <button class="tab-btn tab-live" data-tab="live">
+            LIVE <span id="live-total-count" class="live-badge">0</span>
+          </button>
+
+          <button class="tab-btn" data-tab="finished">FINISHED</button>
+          <button class="tab-btn" data-tab="scheduled">SCHEDULED</button>
+
+          <button class="tab-btn tab-fav ml-auto" data-tab="favorite">
+            <i class="fa-solid fa-star text-yellow-500 mr-2"></i>
+            FAVORITES
+          </button>
+        </div>
+
+        <!-- Date strip row (KEEP like your reference) -->
+        <div class="date-row">
+          <button id="btnPrevDay" class="date-btn" aria-label="Previous day">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+
+          <div id="date-strip" class="date-strip"></div>
+
+          <button id="btnNextDay" class="date-btn" aria-label="Next day">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+
+          <input id="datePicker" type="date" class="date-input" />
+        </div>
+
+        <!-- Fixtures -->
+        <div id="fixtures-container">
+          <div class="loading-placeholder">Initialising Match Data...</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== RIGHT SIDEBAR ===== -->
+    <aside>
+      <!-- Featured Live -->
+      <div class="sidebar-section overflow-hidden">
+        <div class="featured-header">
+          <span>Featured Live</span>
+          <div class="flex gap-4">
+            <button id="carousel-prev" class="featured-nav" aria-label="Prev match">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button id="carousel-next" class="featured-nav" aria-label="Next match">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        <div id="live-carousel-content" class="featured-body"></div>
+      </div>
+
+      <!-- News -->
+      <div class="sidebar-section">
+        <div class="news-header">
+          <h3 class="section-title m-0">Global Headlines</h3>
+          <a href="#" class="news-link">View News</a>
+        </div>
+        <div id="news-container"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ================= FOOTER (KEEP like your reference) ================= -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div>
+        <h2 class="text-xl font-black italic tracking-tighter text-white mb-6 uppercase">
+          BONGDA<span class="text-[#00e676]">HA</span>
+        </h2>
+        <p class="text-[11px] leading-relaxed text-gray-500">
+          Premium real-time football data platform. Delivering unmatched speed for scores, statistics, and global football news.
+        </p>
+        <div class="flex gap-6 mt-10 text-gray-600">
+          <i class="fa-brands fa-facebook hover:text-white cursor-pointer"></i>
+          <i class="fa-brands fa-twitter hover:text-white cursor-pointer"></i>
+          <i class="fa-brands fa-youtube hover:text-white cursor-pointer"></i>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="footer-title">Platform</h3>
+        <a href="#" class="footer-link">Livescore</a>
+        <a href="#" class="footer-link">Predictions</a>
+        <a href="#" class="footer-link">News Feed</a>
+      </div>
+
+      <div>
+        <h3 class="footer-title">Leagues</h3>
+        <a href="#" class="footer-link">Premier League</a>
+        <a href="#" class="footer-link">Champions League</a>
+        <a href="#" class="footer-link">V.League 1</a>
+      </div>
+
+      <div class="footer-safe">
+        <strong class="text-white text-[10px] block mb-2 font-black tracking-widest uppercase">Safe & Responsible</strong>
+        <p class="text-[10px] text-gray-500 leading-normal">
+          Strictly 18+. We provide information only. Always exercise caution and play responsibly.
+        </p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © 2025 BONGDAHA INC.
+    </div>
+  </footer>
+
+  <script src="/main.js"></script>
+</body>
+</html>
