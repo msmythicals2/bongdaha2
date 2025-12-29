@@ -1,103 +1,61 @@
 // =======================
-// BONGDAHA - main.js
-// Real API (via your server.js routes)
+// BONGDAHA - main.js (INTEGRATED & STABLE)
 // =======================
 
 const state = {
-  tab: "all",                 // all | live | finished | scheduled | favorite
-  date: new Date(),           // selected date (device local)
+  tab: "all",
+  date: new Date(),
   favorites: new Set(JSON.parse(localStorage.getItem("favMatches") || "[]")),
   carouselIndex: 0,
-  lastFixtures: [],           // fixtures for selected date
-  lastLive: [],               // live fixtures
-  selectedLeagueId: null,     // optional filter if you later wire pinned leagues
+  lastFixtures: [],
+  lastLive: [],
+  selectedLeagueId: null,
 };
+
+// 1. 定义 COMPETITIONS 固定联赛数据
+const COMPETITION_DATA = [
+  { id: 39, name: "Premier League", country: "England", logo: "https://media.api-sports.io/football/leagues/39.png" },
+  { id: 140, name: "La Liga", country: "Spain", logo: "https://media.api-sports.io/football/leagues/140.png" },
+  { id: 135, name: "Serie A", country: "Italy", logo: "https://media.api-sports.io/football/leagues/135.png" },
+  { id: 78, name: "Bundesliga", country: "Germany", logo: "https://media.api-sports.io/football/leagues/78.png" },
+  { id: 61, name: "Ligue 1", country: "France", logo: "https://media.api-sports.io/football/leagues/61.png" },
+  { id: 271, name: "V.League 1", country: "Vietnam", logo: "https://media.api-sports.io/football/leagues/271.png" },
+  { id: 88, name: "Eredivisie", country: "Netherlands", logo: "https://media.api-sports.io/football/leagues/88.png" },
+  { id: 203, name: "Süper Lig", country: "Turkiye", logo: "https://media.api-sports.io/football/leagues/203.png" },
+  { id: 40, name: "Championship", country: "England", logo: "https://media.api-sports.io/football/leagues/40.png" },
+  { id: 2, name: "Champions League", country: "UEFA", logo: "https://media.api-sports.io/football/leagues/2.png" },
+  { id: 3, name: "Europa League", country: "UEFA", logo: "https://media.api-sports.io/football/leagues/3.png" },
+  { id: 848, name: "Conference League", country: "UEFA", logo: "https://media.api-sports.io/football/leagues/848.png" },
+  { id: 94, name: "Primeira Liga", country: "Portugal", logo: "https://media.api-sports.io/football/leagues/94.png" },
+  { id: 179, name: "Premiership", country: "Scotland", logo: "https://media.api-sports.io/football/leagues/179.png" },
+  { id: 144, name: "Belgian Pro League", country: "Belgium", logo: "https://media.api-sports.io/football/leagues/144.png" },
+  { id: 1, name: "World Cup 2026", country: "International", logo: "https://media.api-sports.io/football/leagues/1.png" }
+];
 
 // ---------- Helpers ----------
 function pad2(n) { return String(n).padStart(2, "0"); }
 
 function toYMD(d) {
-  // local date -> YYYY-MM-DD
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return `${x.getFullYear()}-${pad2(x.getMonth() + 1)}-${pad2(x.getDate())}`;
 }
 
 function formatHHMM(dateStr) {
-  // dateStr is ISO. Display in device local time, 24h.
   const d = new Date(dateStr);
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-function isFinished(short) {
-  return ["FT", "AET", "PEN"].includes(short);
-}
-
-function isLiveStatus(short) {
-  // API-Sports typical live: 1H, 2H, HT, ET, BT, P, LIVE
-  return ["1H", "2H", "HT", "ET", "BT", "P", "LIVE"].includes(short);
-}
-
-function isScheduled(short) {
-  // Not started, Time to be defined
-  return ["NS", "TBD"].includes(short);
-}
-
-function getStatusCellHTML(fx) {
-  const short = fx?.fixture?.status?.short || "";
-  const elapsed = fx?.fixture?.status?.elapsed;
-
-  if (isLiveStatus(short) && typeof elapsed === "number") {
-    return `<span class="live-dot"></span><span>${elapsed}'</span>`;
-  }
-
-  if (isScheduled(short)) {
-    return `<span>${formatHHMM(fx.fixture.date)}</span>`;
-  }
-
-  if (isFinished(short)) {
-    return `<span>FT</span>`;
-  }
-
-  // fallback
-  if (typeof elapsed === "number") return `<span>${elapsed}'</span>`;
-  return `<span>${short || "-"}</span>`;
-}
-
-function getScoreHTML(fx) {
-  const short = fx?.fixture?.status?.short || "";
-  const gh = fx?.goals?.home;
-  const ga = fx?.goals?.away;
-
-  if (isScheduled(short)) return `<span class="score">- : -</span>`;
-  const s = `${gh ?? "-"} : ${ga ?? "-"}`;
-  const cls = isLiveStatus(short) ? "score live" : "score";
-  return `<span class="${cls}">${s}</span>`;
-}
-
-function getLeagueKey(fx) {
-  // group by league id to avoid same-name collisions
-  return String(fx?.league?.id ?? "0");
-}
-
-function getLeagueTitle(fx) {
-  const country = fx?.league?.country || "";
-  const name = fx?.league?.name || "";
-  return `${country} - ${name}`;
-}
-
-function getLeagueFlagUrl(fx) {
-  // API-Sports often provides league.flag as URL
-  const url = fx?.league?.flag;
-  return (typeof url === "string" && url.startsWith("http")) ? url : "";
-}
+function isFinished(s) { return ["FT", "AET", "PEN"].includes(s); }
+function isLiveStatus(s) { return ["1H","2H","HT","ET","BT","P","LIVE"].includes(s); }
+function isScheduled(s) { return ["NS","TBD"].includes(s); }
 
 function escapeHtml(s) {
   return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 // ---------- API ----------
@@ -107,448 +65,387 @@ async function apiGetJSON(url) {
   return r.json();
 }
 
-async function loadFixturesByDate(dateObj) {
-  const ymd = toYMD(dateObj);
-  return apiGetJSON(`/api/fixtures?date=${encodeURIComponent(ymd)}`);
-}
+const loadFixturesByDate = d => apiGetJSON(`/api/fixtures?date=${toYMD(d)}`);
+const loadLive = () => apiGetJSON(`/api/live`);
+const loadNews = () => apiGetJSON(`/api/news`);
 
-async function loadLive() {
-  return apiGetJSON(`/api/live`);
-}
-
-async function loadNews() {
-  return apiGetJSON(`/api/news`);
-}
-
-// ---------- Render: clock ----------
+// ---------- Clock ----------
 function updateClock() {
-  const now = new Date();
-  const txt = `${pad2(now.getDate())}/${pad2(now.getMonth() + 1)}/${now.getFullYear()} ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+  const n = new Date();
   const el = document.getElementById("clock");
-  if (el) el.textContent = txt;
+  if (!el) return;
+  el.textContent =
+    `${pad2(n.getDate())}/${pad2(n.getMonth()+1)}/${n.getFullYear()} ` +
+    `${pad2(n.getHours())}:${pad2(n.getMinutes())}:${pad2(n.getSeconds())}`;
 }
 
-// ---------- Render: date strip ----------
+// ---------- Date strip ----------
 function renderDateStrip() {
   const strip = document.getElementById("date-strip");
   if (!strip) return;
 
-  const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-  const base = new Date(state.date.getFullYear(), state.date.getMonth(), state.date.getDate());
+  const days = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+  const todayYMD = toYMD(new Date());
+  const base = new Date(state.date);
+  const baseYMD = toYMD(base);
 
-  const chips = [];
+  let html = "";
   for (let i = -2; i <= 2; i++) {
     const d = new Date(base);
     d.setDate(base.getDate() + i);
-
-    const isActive = toYMD(d) === toYMD(base);
-    const label = i === 0 ? "TODAY" : days[d.getDay()];
-    chips.push(`
-      <div class="date-chip ${isActive ? "active" : ""}" data-ymd="${toYMD(d)}">
-        <div class="d1">${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}</div>
+    const ymd = toYMD(d);
+    const label = ymd === todayYMD ? "TODAY" : days[d.getDay()];
+    html += `
+      <div class="date-chip ${ymd===baseYMD?"active":""}" data-ymd="${ymd}">
+        <div class="d1">${pad2(d.getDate())}/${pad2(d.getMonth()+1)}</div>
         <div class="d2">${label}</div>
-      </div>
-    `);
+      </div>`;
   }
-
-  strip.innerHTML = chips.join("");
+  strip.innerHTML = html;
 
   const dp = document.getElementById("datePicker");
-  if (dp) dp.value = toYMD(state.date);
+  if (dp) dp.value = baseYMD;
 }
 
-// ---------- Render: tabs ----------
-function setActiveTab(tab) {
-  state.tab = tab;
+// 新增：渲染左侧固定联赛列表
+function renderCompetitions() {
+  const topContainer = document.getElementById('top-competitions');
+  const allContainer = document.getElementById('all-competitions');
+  if (!topContainer || !allContainer) return;
 
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    const t = btn.getAttribute("data-tab");
-    btn.classList.toggle("active", t === tab);
+  const createItem = (c) => `
+    <li class="flex items-center gap-3 p-2 hover:bg-[#252b31] rounded-md cursor-pointer group transition-colors ${state.selectedLeagueId === c.id ? 'bg-[#252b31]' : ''}" 
+        data-action="filter-league" data-league-id="${c.id}">
+        <img src="${c.logo}" class="w-8 h-8 object-contain bg-[#1a1e22] p-1 rounded-md">
+        <div class="flex flex-col min-w-0">
+            <span class="text-[12px] font-bold text-gray-200 group-hover:text-[#00e676] truncate">${escapeHtml(c.name)}</span>
+            <span class="text-[10px] text-gray-500">${escapeHtml(c.country)}</span>
+        </div>
+    </li>`;
+
+  topContainer.innerHTML = COMPETITION_DATA.slice(0, 6).map(createItem).join('');
+  allContainer.innerHTML = COMPETITION_DATA.slice(6).map(createItem).join('');
+}
+
+// ---------- Left Sidebar (NEW) ----------
+function renderLeftSidebar(fixtures) {
+  const countryList = document.getElementById("countries-list");
+  const pinnedList = document.getElementById("pinned-leagues");
+  if (!fixtures) return;
+
+  // 1. 提取唯一联赛用于 "Top Countries"
+  const leaguesMap = new Map();
+  fixtures.forEach(f => {
+    if (!leaguesMap.has(f.league.id)) {
+      leaguesMap.set(f.league.id, f.league);
+    }
   });
 
-  refreshCenter();
-}
-
-// ---------- Render: fixtures list ----------
-function groupByLeague(items) {
-  const groups = new Map();
-  for (const fx of items) {
-    const key = getLeagueKey(fx);
-    if (!groups.has(key)) groups.set(key, { meta: fx, items: [] });
-    groups.get(key).items.push(fx);
-  }
-  return [...groups.values()];
-}
-
-function applyTabFilter(allFixtures, liveFixtures) {
-  // If you ever want "ALL includes live too", you can merge here.
-  const mergedForFav = [...liveFixtures, ...allFixtures];
-
-  if (state.tab === "live") {
-    return liveFixtures;
+  if (countryList) {
+    let cHtml = "";
+    leaguesMap.forEach(l => {
+      const activeCls = state.selectedLeagueId === l.id ? "bg-[#252b31] border-l-2 border-[#00e676]" : "";
+      cHtml += `
+        <div class="flex items-center gap-3 p-2 hover:bg-[#252b31] rounded-sm cursor-pointer group ${activeCls}" 
+             data-action="filter-league" data-league-id="${l.id}">
+          <img src="${l.flag || l.logo}" class="w-4 h-3 object-cover rounded-[1px] opacity-80 group-hover:opacity-100">
+          <span class="text-[11px] font-medium text-gray-400 group-hover:text-[#00e676] truncate">${escapeHtml(l.name)}</span>
+        </div>`;
+    });
+    countryList.innerHTML = cHtml || '<div class="text-[10px] text-gray-600 p-2">No leagues</div>';
   }
 
+  // 2. 提取收藏的联赛用于 "Pinned Leagues"
+  if (pinnedList) {
+    const pinnedMap = new Map();
+    fixtures.forEach(f => {
+      if (state.favorites.has(f.fixture.id) && !pinnedMap.has(f.league.id)) {
+        pinnedMap.set(f.league.id, f.league);
+      }
+    });
+
+    let pHtml = "";
+    pinnedMap.forEach(l => {
+      pHtml += `
+        <li class="flex items-center gap-3 p-2 hover:bg-[#252b31] rounded-sm cursor-pointer group" 
+            data-action="filter-league" data-league-id="${l.id}">
+          <i class="fa-solid fa-thumbtack text-[10px] text-[#00e676]"></i>
+          <span class="text-[11px] text-gray-300 group-hover:text-white truncate">${escapeHtml(l.name)}</span>
+        </li>`;
+    });
+    pinnedList.innerHTML = pHtml || '<div class="text-[10px] text-gray-700 px-2 italic">No pinned items</div>';
+  }
+}
+
+// ---------- Fixtures ----------
+function applyTabFilter(all, live) {
+  if (state.tab === "live") return live;
   if (state.tab === "favorite") {
-    return mergedForFav.filter(fx => state.favorites.has(fx?.fixture?.id));
+    return [...all, ...live].filter(f => state.favorites.has(f.fixture.id));
   }
-
-  // all/finished/scheduled are based on selected date fixtures
   if (state.tab === "finished") {
-    return allFixtures.filter(fx => isFinished(fx?.fixture?.status?.short || ""));
+    return all.filter(f => isFinished(f.fixture.status.short));
   }
-
   if (state.tab === "scheduled") {
-    return allFixtures.filter(fx => isScheduled(fx?.fixture?.status?.short || ""));
+    return all.filter(f => isScheduled(f.fixture.status.short));
   }
-
-  // default all: show date fixtures
-  return allFixtures;
+  return all;
 }
 
-function renderFixtures(fixtures, liveFixtures) {
-  const container = document.getElementById("fixtures-container");
-  if (!container) return;
+function renderFixtures(fixtures, live) {
+  const el = document.getElementById("fixtures-container");
+  if (!el) return;
 
-  const list = applyTabFilter(fixtures, liveFixtures);
+  let list = applyTabFilter(fixtures, live);
+  if (state.selectedLeagueId) {
+    list = list.filter(f => f.league.id === state.selectedLeagueId);
+  }
 
-  // Optional league filter hook (not used unless you set selectedLeagueId)
-  const filtered = state.selectedLeagueId
-    ? list.filter(fx => Number(fx?.league?.id) === Number(state.selectedLeagueId))
-    : list;
-
-  if (!filtered.length) {
-    container.innerHTML = `<div class="loading-placeholder">No matches</div>`;
+  if (!list.length) {
+    el.innerHTML = `<div class="loading-placeholder">No matches found</div>`;
     return;
   }
 
-  const groups = groupByLeague(filtered);
+  const map = new Map();
+  list.forEach(f => {
+    if (!map.has(f.league.id)) map.set(f.league.id, { fx: f, items: [] });
+    map.get(f.league.id).items.push(f);
+  });
 
   let html = "";
-  for (const g of groups) {
-    const fx0 = g.meta;
-    const flagUrl = getLeagueFlagUrl(fx0);
-    const leagueLogo = fx0?.league?.logo || "";
-    const title = getLeagueTitle(fx0);
-
+  map.forEach(g => {
+    const l = g.fx.league;
     html += `
       <div class="league-header">
-        ${flagUrl ? `<img class="league-flag" src="${flagUrl}" alt="" />` : ""}
-        ${leagueLogo ? `<img class="league-logo" src="${leagueLogo}" alt="" />` : ""}
-        <span>${escapeHtml(title)}</span>
+        ${l.flag ? `<img class="league-flag" src="${l.flag}">` : ""}
+        ${l.logo ? `<img class="league-logo" src="${l.logo}">` : ""}
+        <span>${escapeHtml(l.country)} - ${escapeHtml(l.name)}</span>
       </div>
     `;
-
-    html += g.items.map(fx => {
-      const id = fx?.fixture?.id;
-      const homeName = fx?.teams?.home?.name || "";
-      const awayName = fx?.teams?.away?.name || "";
-      const homeLogo = fx?.teams?.home?.logo || "";
-      const awayLogo = fx?.teams?.away?.logo || "";
-
-      const short = fx?.fixture?.status?.short || "";
-      const starOn = state.favorites.has(id);
-
+    html += g.items.map(f => {
+      const s = f.fixture.status.short;
+      const isLive = isLiveStatus(s); //
+      const liveCls = isLive ? "score live" : "score";
       return `
-        <div class="match-row" data-fixture-id="${id}">
-          <div class="status-cell">${getStatusCellHTML(fx)}</div>
-
-          <div class="star-btn ${starOn ? "on" : ""}" data-action="toggle-fav" title="Favorite">
-            <i class="fa-${starOn ? "solid" : "regular"} fa-star"></i>
+        <div class="match-row" data-fixture-id="${f.fixture.id}">
+          <div class="status-cell">
+            ${isLive ? `<span class="live-dot"></span>${f.fixture.status.elapsed}'`
+            : isScheduled(s) ? formatHHMM(f.fixture.date)
+            : "FT"}
           </div>
-
+          <div class="star-btn ${state.favorites.has(f.fixture.id) ? "on" : ""}" data-action="toggle-fav">
+            <i class="fa-${state.favorites.has(f.fixture.id) ? "solid" : "regular"} fa-star"></i>
+          </div>
           <div class="team home">
-            <span class="team-name">${escapeHtml(homeName)}</span>
-            ${homeLogo ? `<img class="team-logo" src="${homeLogo}" alt="" />` : ""}
+            <span class="team-name">${escapeHtml(f.teams.home.name)}</span>
+            <img class="team-logo" src="${f.teams.home.logo}">
           </div>
-
           <div class="score-cell">
-            ${getScoreHTML(fx)}
+            <span class="${liveCls}">${f.goals.home ?? "-"} : ${f.goals.away ?? "-"}</span>
           </div>
-
           <div class="team away">
-            ${awayLogo ? `<img class="team-logo" src="${awayLogo}" alt="" />` : ""}
-            <span class="team-name">${escapeHtml(awayName)}</span>
+            <img class="team-logo" src="${f.teams.away.logo}">
+            <span class="team-name">${escapeHtml(f.teams.away.name)}</span>
           </div>
-
-          <div class="chart-btn" title="Stats">
-            <i class="fa-solid fa-chart-line"></i>
+          <div class="match-actions">
+            <span class="live-indicator ${isLive ? 'active' : ''}">LIVE</span>
+            <div class="chart-btn" data-action="open-details">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join("");
-  }
+  });
 
-  container.innerHTML = html;
+  el.innerHTML = html;
 }
 
-// ---------- Right: Featured Live ----------
-function renderFeaturedLive(liveFixtures) {
+// ---------- Right ----------
+function renderFeaturedLive(live) {
   const box = document.getElementById("live-carousel-content");
   if (!box) return;
-
-  const live = liveFixtures || [];
   if (!live.length) {
-    box.innerHTML = `<div class="loading-placeholder" style="padding:32px 10px;">No data</div>`;
+    box.innerHTML = `<div class="loading-placeholder">No live matches</div>`;
     return;
   }
-
-  const fx = live[(state.carouselIndex % live.length + live.length) % live.length];
-
-  const flagUrl = getLeagueFlagUrl(fx);
-  const leagueName = fx?.league?.name || "";
-  const country = fx?.league?.country || "";
-  const elapsed = fx?.fixture?.status?.elapsed;
-
-  const home = fx?.teams?.home?.name || "";
-  const away = fx?.teams?.away?.name || "";
-  const homeLogo = fx?.teams?.home?.logo || "";
-  const awayLogo = fx?.teams?.away?.logo || "";
-
-  const gh = fx?.goals?.home ?? "-";
-  const ga = fx?.goals?.away ?? "-";
-
-  const topLine = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-      ${flagUrl ? `<img class="league-flag" src="${flagUrl}" alt="" />` : ""}
-      <div style="font-size:10px;font-weight:900;letter-spacing:.25em;color:var(--green);text-transform:uppercase;">
-        ${escapeHtml(country)} · ${escapeHtml(leagueName)}
-      </div>
-    </div>
-  `;
-
-  const timeBadge = (typeof elapsed === "number")
-    ? `<div style="background:var(--red);padding:6px 10px;border-radius:6px;font-size:10px;font-weight:900;letter-spacing:.2em;">${elapsed}'</div>`
-    : `<div style="background:#2d3439;padding:6px 10px;border-radius:6px;font-size:10px;font-weight:900;letter-spacing:.2em;">LIVE</div>`;
-
+  const fx = live[state.carouselIndex % live.length];
   box.innerHTML = `
-    ${topLine}
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;">
-      <div style="width:110px;text-align:center;">
-        ${homeLogo ? `<img src="${homeLogo}" style="width:34px;height:34px;object-fit:contain;margin:0 auto 8px;" />` : ""}
-        <div style="font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(home)}</div>
-      </div>
-
-      <div style="text-align:center;min-width:90px;">
-        <div style="font-size:30px;font-weight:900;letter-spacing:-.04em;margin-bottom:10px;">${gh}-${ga}</div>
-        ${timeBadge}
-      </div>
-
-      <div style="width:110px;text-align:center;">
-        ${awayLogo ? `<img src="${awayLogo}" style="width:34px;height:34px;object-fit:contain;margin:0 auto 8px;" />` : ""}
-        <div style="font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(away)}</div>
-      </div>
-    </div>
-  `;
-}
-
-// ---------- Right: News ----------
-function renderNews(items) {
-  const container = document.getElementById("news-container");
-  if (!container) return;
-
-  const news = Array.isArray(items) ? items : [];
-  if (!news.length) {
-    container.innerHTML = `<div class="loading-placeholder" style="padding:28px 10px;">No news</div>`;
-    return;
-  }
-
-  container.innerHTML = news.slice(0, 12).map(n => {
-    const title = n?.title || "";
-    const link = n?.link || "#";
-    const time = n?.pubDate ? new Date(n.pubDate).toLocaleString() : "";
-    return `
-      <div class="news-item" onclick="window.open('${link}', '_blank')">
-        <div class="news-title">${escapeHtml(title)}</div>
-        <div class="news-meta">
-          <span class="tag">Trending</span>
-          <span>•</span>
-          <span>${escapeHtml(time)}</span>
+    <div class="text-center">
+      <div class="text-[10px] text-gray-500 mb-2 uppercase tracking-widest">${escapeHtml(fx.league.name)}</div>
+      <div class="flex items-center justify-around gap-2 mt-4">
+        <div class="text-center">
+          <img src="${fx.teams.home.logo}" class="w-10 h-10 mx-auto mb-2 object-contain">
+          <div class="text-[11px] font-bold w-20 truncate">${escapeHtml(fx.teams.home.name)}</div>
+        </div>
+        <div class="text-xl font-black text-[#00e676]">${fx.goals.home ?? 0} : ${fx.goals.away ?? 0}</div>
+        <div class="text-center">
+          <img src="${fx.teams.away.logo}" class="w-10 h-10 mx-auto mb-2 object-contain">
+          <div class="text-[11px] font-bold w-20 truncate">${escapeHtml(fx.teams.away.name)}</div>
         </div>
       </div>
-    `;
-  }).join("");
+      <div class="mt-4 text-[10px] text-red-500 font-bold animate-pulse">${fx.fixture.status.elapsed}' LIVE</div>
+    </div>
+  `;
 }
 
-// ---------- Sidebar (simple + safe placeholders, keep structure) ----------
-function renderPinnedLeagues() {
-  const el = document.getElementById("pinned-leagues");
+function renderNews(items) {
+  const el = document.getElementById("news-container");
   if (!el) return;
-
-  // You can adjust ids anytime. This keeps UI and structure.
-  const pinned = [
-    { id: 39, name: "Premier League", flag: "https://media.api-sports.io/flags/gb.svg" },
-    { id: 140, name: "La Liga", flag: "https://media.api-sports.io/flags/es.svg" },
-    { id: 135, name: "Serie A", flag: "https://media.api-sports.io/flags/it.svg" },
-    { id: 78, name: "Bundesliga", flag: "https://media.api-sports.io/flags/de.svg" },
-    { id: 61, name: "Ligue 1", flag: "https://media.api-sports.io/flags/fr.svg" },
-    { id: 283, name: "V.League 1", flag: "https://media.api-sports.io/flags/vn.svg" },
-  ];
-
-  el.innerHTML = pinned.map(l => `
-    <li class="p-2 rounded flex items-center gap-3 text-xs font-bold transition-all hover:bg-[#252b31] cursor-pointer"
-        data-action="filter-league" data-league-id="${l.id}">
-      <img class="league-flag" src="${l.flag}" alt="" />
-      <span class="text-gray-400">${escapeHtml(l.name)}</span>
-    </li>
-  `).join("");
-}
-
-function renderCountries(fixtures) {
-  const el = document.getElementById("countries-list");
-  if (!el) return;
-
-  // Build a small list from today fixtures (fallback to some defaults)
-  const map = new Map();
-  for (const fx of fixtures || []) {
-    const country = fx?.league?.country;
-    const flag = fx?.league?.flag;
-    if (!country) continue;
-    if (!map.has(country)) map.set(country, flag || "");
-  }
-
-  const arr = [...map.entries()].slice(0, 12);
-  if (!arr.length) {
-    const defaults = [
-      ["England", "https://media.api-sports.io/flags/gb.svg"],
-      ["Spain", "https://media.api-sports.io/flags/es.svg"],
-      ["Italy", "https://media.api-sports.io/flags/it.svg"],
-      ["Germany", "https://media.api-sports.io/flags/de.svg"],
-      ["France", "https://media.api-sports.io/flags/fr.svg"],
-      ["Vietnam", "https://media.api-sports.io/flags/vn.svg"],
-    ];
-    el.innerHTML = defaults.map(([n, f]) => `
-      <div class="flex items-center gap-3 text-[11px] font-bold text-gray-500 hover:text-white cursor-pointer p-1.5 group transition-colors">
-        ${f ? `<img class="league-flag" src="${f}" alt="" />` : ""}
-        <span>${escapeHtml(n)}</span>
-      </div>
-    `).join("");
+  if (!items.length) {
+    el.innerHTML = `<div class="loading-placeholder">No news available</div>`;
     return;
   }
-
-  el.innerHTML = arr.map(([n, f]) => `
-    <div class="flex items-center gap-3 text-[11px] font-bold text-gray-500 hover:text-white cursor-pointer p-1.5 group transition-colors">
-      ${f ? `<img class="league-flag" src="${f}" alt="" />` : ""}
-      <span>${escapeHtml(n)}</span>
-    </div>
-  `).join("");
+  el.innerHTML = items.slice(0,6).map(n => `
+    <div class="news-item" onclick="window.open('${n.link}','_blank')">
+      <div class="news-title">${escapeHtml(n.title)}</div>
+      <div class="news-meta">
+        <span class="tag">Breaking</span>
+        <span>Latest Update</span>
+      </div>
+    </div>`).join("");
 }
 
-// ---------- Live count badge ----------
-function updateLiveBadge(liveFixtures) {
-  const badge = document.getElementById("live-total-count");
-  if (!badge) return;
-
-  const count = (liveFixtures || []).length;
-  badge.textContent = String(count);
-  badge.classList.toggle("live-on", count > 0);
+function updateLiveBadge(live) {
+  const b = document.getElementById("live-total-count");
+  if (!b) return;
+  b.textContent = live.length;
+  b.classList.toggle("live-on", live.length>0);
 }
 
 // ---------- Refresh ----------
 async function refreshAll() {
-  // Load in parallel
-  const [fixtures, live, news] = await Promise.all([
+  const [fx, live, news] = await Promise.all([
     loadFixturesByDate(state.date),
     loadLive(),
     loadNews()
   ]);
 
-  state.lastFixtures = Array.isArray(fixtures) ? fixtures : [];
-  state.lastLive = Array.isArray(live) ? live : [];
+  state.lastFixtures = fx || [];
+  state.lastLive = live || [];
 
   updateLiveBadge(state.lastLive);
   renderDateStrip();
-  renderPinnedLeagues();
-  renderCountries(state.lastFixtures);
+  renderCompetitions(); // <--- 核心：确保这一行在里面
   renderFeaturedLive(state.lastLive);
-  renderNews(news);
+  renderNews(news || []);
   renderFixtures(state.lastFixtures, state.lastLive);
+  renderLeftSidebar(state.lastFixtures); // 刷新左侧边栏
 }
 
 function refreshCenter() {
   renderFixtures(state.lastFixtures, state.lastLive);
+  renderCompetitions(); // <--- 建议加上这一行，确保高亮状态同步
+  renderLeftSidebar(state.lastFixtures); // 刷新收藏联动
 }
 
 // ---------- Events ----------
 function bindEvents() {
-  // Tabs
+  // --- 1. Tab 切换逻辑 ---
   document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const tab = btn.getAttribute("data-tab");
-      setActiveTab(tab);
+    btn.addEventListener("click", async () => {
+      state.tab = btn.dataset.tab;
+      state.selectedLeagueId = null;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+      await refreshAll();
     });
   });
 
-  // Date navigation
+  // --- 2. 侧边栏折叠逻辑 (注意：先定义变量) ---
+  const compBtn = document.getElementById('toggle-competitions');
+  const allCompList = document.getElementById('all-competitions');
+  const chevron = document.getElementById('comp-chevron');
+
+  if (compBtn && allCompList) {
+    compBtn.addEventListener('click', () => {
+      const isHidden = allCompList.classList.contains('hidden');
+      allCompList.classList.toggle('hidden');
+      if (chevron) chevron.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+    });
+  }
+
+  // --- 3. 弹窗关闭逻辑 (必须独立出来，放在根部) ---
+  document.getElementById("close-modal")?.addEventListener("click", () => {
+    document.getElementById("match-modal").classList.add("hidden");
+  });
+
+  document.getElementById("match-modal")?.addEventListener("click", (e) => {
+    if (e.target.id === "match-modal") {
+      e.target.classList.add("hidden");
+    }
+  });
+
+  // --- 4. 日期导航 ---
   const prev = document.getElementById("btnPrevDay");
   const next = document.getElementById("btnNextDay");
   const dp = document.getElementById("datePicker");
 
-  if (prev) prev.addEventListener("click", async () => {
-    state.date.setDate(state.date.getDate() - 1);
+  async function onDateChange(d) {
+    state.date = d;
+    state.selectedLeagueId = null;
     await refreshAll();
+  }
+
+  prev?.addEventListener("click", () => {
+    const d = new Date(state.date); 
+    d.setDate(d.getDate() - 1);
+    onDateChange(d);
   });
 
-  if (next) next.addEventListener("click", async () => {
-    state.date.setDate(state.date.getDate() + 1);
-    await refreshAll();
+  next?.addEventListener("click", () => {
+    const d = new Date(state.date); 
+    d.setDate(d.getDate() + 1);
+    onDateChange(d);
   });
 
-  if (dp) dp.addEventListener("change", async () => {
-    if (!dp.value) return;
+  dp?.addEventListener("change", () => {
     const [y, m, d] = dp.value.split("-").map(Number);
-    state.date = new Date(y, m - 1, d);
-    await refreshAll();
+    onDateChange(new Date(y, m - 1, d));
   });
 
-  // Click date chip
-  document.addEventListener("click", async (e) => {
-    const chip = e.target.closest(".date-chip");
-    if (!chip) return;
-
-    const ymd = chip.getAttribute("data-ymd");
-    if (!ymd) return;
-
-    const [y, m, d] = ymd.split("-").map(Number);
-    state.date = new Date(y, m - 1, d);
-    await refreshAll();
+  // --- 5. 轮播图导航 ---
+  document.getElementById("carousel-prev")?.addEventListener("click", () => {
+    state.carouselIndex = state.carouselIndex > 0 ? state.carouselIndex - 1 : 0;
+    renderFeaturedLive(state.lastLive);
   });
-
-  // Toggle favorite + pinned league filter
-  document.addEventListener("click", (e) => {
-    const favBtn = e.target.closest("[data-action='toggle-fav']");
-    if (favBtn) {
-      const row = e.target.closest(".match-row");
-      const id = Number(row?.getAttribute("data-fixture-id"));
-      if (!id) return;
-
-      if (state.favorites.has(id)) state.favorites.delete(id);
-      else state.favorites.add(id);
-
-      localStorage.setItem("favMatches", JSON.stringify([...state.favorites]));
-      refreshCenter();
-      return;
-    }
-
-    const lg = e.target.closest("[data-action='filter-league']");
-    if (lg) {
-      const leagueId = Number(lg.getAttribute("data-league-id"));
-      state.selectedLeagueId = (state.selectedLeagueId === leagueId) ? null : leagueId;
-      refreshCenter();
-      return;
-    }
-  });
-
-  // Featured live carousel
-  const cPrev = document.getElementById("carousel-prev");
-  const cNext = document.getElementById("carousel-next");
-
-  if (cNext) cNext.addEventListener("click", () => {
+  document.getElementById("carousel-next")?.addEventListener("click", () => {
     state.carouselIndex++;
     renderFeaturedLive(state.lastLive);
   });
-  if (cPrev) cPrev.addEventListener("click", () => {
-    state.carouselIndex--;
-    renderFeaturedLive(state.lastLive);
+
+  // --- 6. 事件委托 (全局点击：收藏、过滤联赛、打开详情) ---
+  document.addEventListener("click", e => {
+    // 日期 Chip
+    const chip = e.target.closest(".date-chip");
+    if (chip) {
+      const [y, m, d] = chip.dataset.ymd.split("-").map(Number);
+      onDateChange(new Date(y, m - 1, d));
+    }
+
+    // 收藏功能
+    const fav = e.target.closest("[data-action='toggle-fav']");
+    if (fav) {
+      const row = fav.closest(".match-row");
+      const id = Number(row.dataset.fixtureId);
+      state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id);
+      localStorage.setItem("favMatches", JSON.stringify([...state.favorites]));
+      refreshCenter();
+    }
+
+    // 联赛过滤
+    const lg = e.target.closest("[data-action='filter-league']");
+    if (lg) {
+      const lid = Number(lg.dataset.leagueId);
+      state.selectedLeagueId = (state.selectedLeagueId === lid) ? null : lid;
+      refreshCenter();
+    }
+
+    // 打开详情
+    const detailsBtn = e.target.closest("[data-action='open-details']");
+    if (detailsBtn) {
+      const row = detailsBtn.closest(".match-row");
+      const matchId = Number(row.dataset.fixtureId);
+      openMatchDetails(matchId);
+    }
   });
 }
 
@@ -556,10 +453,127 @@ function bindEvents() {
 async function init() {
   updateClock();
   setInterval(updateClock, 1000);
-
   bindEvents();
   await refreshAll();
 }
 
-// go
+// 每 60 秒自动刷新一次直播数据和中间列表
+setInterval(() => {
+  refreshAll();
+}, 60000);
+
 window.addEventListener("load", init);
+
+// 赛事资料弹窗逻辑
+// 修改后的 openMatchDetails 函数
+async function openMatchDetails(matchId) {
+    const modal = document.getElementById("match-modal");
+    const body = document.getElementById("modal-body");
+    const loader = document.getElementById("modal-loader");
+
+    modal.classList.remove("hidden");
+    body.innerHTML = "";
+    loader.style.display = "block";
+
+    try {
+        // 抓取包含 statistics 的完整详情 (API-Football 通常需要单独请求或在 fixtures 数组中包含)
+        const response = await fetch(`/api/fixtures?id=${matchId}`);
+        const data = await response.json();
+        const match = data[0];
+
+        if (!match) throw new Error("Match not found");
+        loader.style.display = "none";
+
+        // 渲染基础结构
+        body.innerHTML = `
+            <div class="modal-header-box">
+                <div class="team">
+                    <img src="${match.teams.home.logo}" class="team-logo">
+                    <span class="team-name">${match.teams.home.name}</span>
+                </div>
+                <div class="score-big">${match.goals.home ?? 0} - ${match.goals.away ?? 0}</div>
+                <div class="team">
+                    <img src="${match.teams.away.logo}" class="team-logo">
+                    <span class="team-name">${match.teams.away.name}</span>
+                </div>
+            </div>
+            <div class="modal-tabs" id="modal-tabs">
+                <div class="modal-tab-item active" data-target="summary">Summary</div>
+                <div class="modal-tab-item" data-target="stats">Stats</div>
+            </div>
+            <div id="modal-tab-content">
+                ${renderSummary(match)}
+            </div>
+        `;
+
+        // 绑定内部 Tab 切换事件
+        document.getElementById("modal-tabs").addEventListener("click", e => {
+            const tab = e.target.closest(".modal-tab-item");
+            if (!tab) return;
+            
+            document.querySelectorAll(".modal-tab-item").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+
+            const content = document.getElementById("modal-tab-content");
+            if (tab.dataset.target === "summary") content.innerHTML = renderSummary(match);
+            if (tab.dataset.target === "stats") content.innerHTML = renderStats(match);
+        });
+
+    } catch (err) {
+        loader.style.display = "none";
+        body.innerHTML = `<div class="loading-placeholder" style="color:var(--red)">Failed to load data.</div>`;
+    }
+}
+
+// 辅助函数：渲染事件轴
+function renderSummary(match) {
+    if (!match.events || match.events.length === 0) return `<div class="loading-placeholder">No events</div>`;
+    return `<div class="events-container">` + match.events.map(ev => {
+        const isHome = ev.team.id === match.teams.home.id;
+        const icon = ev.type === "Goal" ? "⚽" : "🟨";
+        return `
+            <div class="event-row">
+                <div class="event-time">${ev.time.elapsed}'</div>
+                <div class="event-detail">${isHome ? ev.player.name : ""}</div>
+                <div class="event-icon">${icon}</div>
+                <div class="event-detail">${!isHome ? ev.player.name : ""}</div>
+            </div>`;
+    }).join("") + `</div>`;
+}
+
+  // 辅助函数：渲染统计对比条
+function renderStats(match) {
+if (match.fixture.status.short === 'NS') {
+    return `<div class="loading-placeholder">Match has not started. Stats will be available once the match begins.</div>`;
+}
+    if (!match.statistics || match.statistics.length === 0) return `<div class="loading-placeholder">Stats not available</div>`;
+    
+    const homeStats = match.statistics[0].statistics;
+    const awayStats = match.statistics[1].statistics;
+
+    const types = ["Ball Possession", "Total Shots", "Shots on Goal", "Corner Kicks"];
+    
+    return `<div class="stats-container">` + types.map(type => {
+        const hVal = homeStats.find(s => s.type === type)?.value || 0;
+        const aVal = awayStats.find(s => s.type === type)?.value || 0;
+        
+        // --- 核心修改部分：格式化显示值 ---
+        const hValDisplay = (type === "Ball Possession" && hVal && !String(hVal).includes('%')) ? hVal + '%' : hVal;
+        const aValDisplay = (type === "Ball Possession" && aVal && !String(aVal).includes('%')) ? aVal + '%' : aVal;
+
+        // 计算进度条百分比（去掉百分号转为纯数字计算）
+        const hNum = parseInt(hVal) || 0;
+        const aNum = parseInt(aVal) || 0;
+        const total = hNum + aNum || 1;
+        const hWidth = (hNum / total) * 100;
+
+        return `
+            <div class="stat-item">
+                <div class="stat-info"><span>${hValDisplay}</span><span>${type}</span><span>${aValDisplay}</span></div>
+                <div class="stat-bar-bg">
+                    <div class="stat-bar-home" style="width: ${hWidth}%"></div>
+                    <div class="stat-bar-away" style="width: ${100 - hWidth}%"></div>
+                </div>
+            </div>`;
+    }).join("") + `</div>`;
+}

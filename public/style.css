@@ -14,7 +14,7 @@
 body{
   background: var(--bg);
   color: var(--text);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   min-width: 1400px;
   overflow-x: auto;
   display: flex;
@@ -59,7 +59,34 @@ body{
   margin-bottom: 14px;
 }
 
-/* Main card */
+/* =========================
+   NEW: Left Sidebar Items (修复补充)
+   ========================= */
+[data-action="filter-league"] {
+  transition: all 0.15s ease-in-out;
+  border-left: 2px solid transparent;
+}
+
+[data-action="filter-league"]:hover {
+  background-color: #252b31;
+}
+
+/* 选中高亮状态 */
+[data-action="filter-league"].bg-\[\#252b31\] {
+  border-left-color: var(--green);
+}
+
+#countries-list img, #pinned-leagues img {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+#pinned-leagues li {
+  transition: background 0.2s;
+}
+
+/* =========================
+   Main card & Tabs
+   ========================= */
 .main-card{
   background: var(--panel);
   border: 1px solid var(--border);
@@ -68,7 +95,6 @@ body{
   box-shadow: 0 20px 60px rgba(0,0,0,.5);
 }
 
-/* Tabs */
 .tabs-nav{
   background: var(--panel);
   border-bottom: 1px solid var(--border);
@@ -119,12 +145,12 @@ body{
   background: #2d3439;
   color: #8b97a5;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0;
 }
 
 .live-badge.live-on{
-  background: var(--red);
+  background: #d10b0b;
   color: #fff;
 }
 
@@ -167,13 +193,13 @@ body{
 
 .date-chip .d1{
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -.02em;
   color: #6b7280;
 }
 .date-chip .d2{
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 700;
   opacity: .7;
   letter-spacing: .12em;
   color: #6b7280;
@@ -184,24 +210,13 @@ body{
   color: var(--green);
 }
 
-.date-input{
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: #cbd5e1;
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 10px;
-  outline: none;
-}
-.date-input:focus{ border-color: var(--green); }
-
 /* Fixtures */
 .loading-placeholder{
   padding: 80px 20px;
   text-align: center;
   color: #6b7280;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
 }
@@ -214,9 +229,9 @@ body{
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 900;
-  font-size: 11px;
-  color: #9aa6b2;
+  font-weight: 700;
+  font-size: 12px;
+  color: #00e676;
   letter-spacing: .05em;
 }
 
@@ -235,22 +250,29 @@ body{
   filter: drop-shadow(0 2px 6px rgba(0,0,0,.25));
 }
 
+.score-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .match-row{
   background: var(--panel);
   border-bottom: 1px solid var(--border);
   display: grid;
-  grid-template-columns: 70px 36px 1fr 90px 1fr 36px;
+  grid-template-columns: 70px 36px 1fr 90px 1fr 10px 85px;
   align-items: center;
   padding: 10px 10px;
   font-size: 12px;
+  transition: background 0.2s;
 }
 
 .match-row:hover{ background: #252b31; }
 
 .status-cell{
-  font-weight: 900;
+  font-weight: 600;
   font-size: 11px;
-  color: #6b7280;
+  color: #c0c3ca;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,8 +321,8 @@ body{
 }
 
 .team-name{
-  font-weight: 800;
-  font-size: 12px;
+  font-weight: 500;
+  font-size: 13px;
   color: #cbd5e1;
   white-space: nowrap;
   overflow: hidden;
@@ -309,15 +331,19 @@ body{
 }
 
 .score{
-  font-weight: 900;
-  font-size: 16px;
-  text-align: center;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+  color: #cbd5e1;
   font-variant-numeric: tabular-nums;
   letter-spacing: -.02em;
 }
 
-.score.live{ color: var(--green); }
+.score.live {
+    color: var(--white)rtant; /* 直播中的比分显示为绿色 */
+}
 
 .chart-btn{
   display: inline-flex;
@@ -330,18 +356,18 @@ body{
 
 /* Right: Featured live */
 .featured-header{
-  background: var(--red);
+  background: #64031b;
   color: #fff;
   padding: 8px 12px;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: .2em;
   text-transform: uppercase;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.featured-nav{ color: rgba(255,255,255,.9); }
+.featured-nav{ color: rgba(255,255,255,.9); cursor: pointer; }
 .featured-nav:hover{ color: #000; }
 
 .featured-body{
@@ -349,6 +375,9 @@ body{
   background: #000;
   color: #fff;
   min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* News */
@@ -362,7 +391,7 @@ body{
 }
 .news-link{
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: .2em;
   text-transform: uppercase;
   color: var(--green);
@@ -382,7 +411,7 @@ body{
 }
 .news-title{
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 600;
   color: #cbd5e1;
   line-height: 1.35;
   margin-bottom: 6px;
@@ -391,7 +420,7 @@ body{
   display: flex;
   gap: 8px;
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: .2em;
   text-transform: uppercase;
   color: #6b7280;
@@ -414,7 +443,7 @@ body{
 }
 .footer-title{
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   color: #fff;
   margin-bottom: 14px;
   text-transform: uppercase;
@@ -451,3 +480,373 @@ body{
 .custom-scrollbar::-webkit-scrollbar{ width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track{ background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb{ background: #3f4a54; border-radius: 10px; }
+
+/* =========================
+   Date Picker – FINAL TUNING
+   ========================= */
+input[type="date"] {
+  position: relative;
+  top: -3px; 
+  width: 115px;
+  height: 32px;
+  background-color: #0f1724;
+  color: #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 4px;
+  padding: 6px 10px 6px 10px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.9;
+  width: 16px;
+  height: 18px;
+  margin-right: 0px;
+  filter: invert(1);
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* ===================================================
+   LEFT SIDEBAR - COMPETITIONS & PINNED STYLES
+   =================================================== */
+
+/* 1. 列表基础样式 */
+#top-competitions, #all-competitions, #pinned-leagues, #countries-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* 2. 联赛项布局：仿照图3效果 */
+[data-action="filter-league"] {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 2px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* 鼠标悬停及选中状态 */
+[data-action="filter-league"]:hover {
+    background-color: #252b31;
+}
+
+[data-action="filter-league"].active, 
+[data-action="filter-league"][style*="background"] { /* 兼容JS直接改背景的情况 */
+    background-color: #252b31 !important;
+}
+
+/* 3. Logo 容器样式 */
+[data-action="filter-league"] img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    background-color: #1a1e22; /* 图标背景色 */
+    padding: 4px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+/* 4. 文字布局：联赛名+国家名 */
+.flex-col {
+    display: flex;
+    flex-direction: column;
+    margin-left: 12px;
+    overflow: hidden;
+}
+
+.text-gray-200 { /* 联赛名 */
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.text-gray-500 { /* 国家名 */
+    color: #64748b;
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+/* 悬停时联赛名变绿 (仿照主流UI) */
+[data-action="filter-league"]:hover .text-gray-200 {
+    color: #00e676;
+}
+
+/* 5. 折叠箭头旋转 */
+#comp-chevron {
+    transition: transform 0.3s ease;
+    color: #64748b;
+}
+
+/* 6. Pinned League 专属样式 (带图钉图标) */
+#pinned-leagues li i {
+    font-size: 10px;
+    color: #00e676;
+    margin-right: 8px;
+}
+
+/* 7. 隐藏列表的过渡 */
+.hidden {
+    display: none !important;
+}
+
+/* 自定义左侧滚动条 */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3f474e;
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #00e676;
+}
+
+/* 强制 Header 内部所有元素垂直居中 */
+.site-header .flex {
+    display: flex;
+    align-items: center; /* 关键：解决偏高问题 */
+}
+
+/* 统一导航链接的样式 */
+.site-header nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;      /* 统一 Football 和 News 之间的间距 */
+    margin-left: 40px; /* 增加 LOGO 和文字之间的间距，解决太靠左 */
+    height: 100%; /* 确保导航栏占满 Header 高度 */
+}
+
+.site-header nav a {
+    font-size: 13px;       /* 统一字体大小 */
+    font-weight: 700;      /* 统一粗细 */
+    text-transform: uppercase;
+    letter-spacing: 1px;   /* 增加字间距，看起来更高级 */
+    line-height: 1;        /* 消除行高导致的偏移 */
+    display: flex;
+    align-items: center;   /* 确保文字在 A 标签内部也居中 */
+    height: 100%; /* 关键：让点击区域占满高度，且文字垂直居中 */
+    transition: color 0.2s; /* 增加平滑过渡 */
+}
+
+/* 针对 FOOTBALL 的特殊绿色 */
+.site-header nav a:first-child {
+    color: #00e676;
+}
+
+/* 针对 NEWS 的灰色 */
+.site-header nav a:last-child {
+    color: #64748b;
+}
+
+/* ===================================================
+   FIX: RIGHT SIDEBAR FEATURED LIVE (RED BOX AREA)
+   =================================================== */
+
+/* 1. 强制右侧比分为白色 */
+.featured-body .score, 
+.featured-body .score.live,
+#live-carousel-content .score {
+    color: #ffffff !important; 
+    font-size: 24px !important;  /* 调大比分数字 */
+    font-weight: 800;
+}
+
+/* 2. 调大右侧直播时间 (40' LIVE) */
+.featured-body .status-cell,
+#live-carousel-content .status-cell {
+    font-size: 16px !important;  /* 调大时间 */
+    font-weight: 700;
+    color: #ff3b3b !important;   /* 确保 LIVE 时间是醒目的红色 */
+    display: flex;
+    flex-direction: column;      /* 让时间在比分下方居中显示 */
+    align-items: center;
+    margin-top: 10px;
+}
+
+/* 3. 如果想让右边球队名字也大一点 */
+.featured-body .team-name {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* 右侧动作按钮容器 */
+.match-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* 靠右对齐 */
+  gap: 12px;                /* LIVE 和图标之间的间距 */
+  padding-right: 5px;
+}
+
+/* LIVE 指示文字 */
+.live-indicator {
+  font-size: 10px;
+  font-weight: 900;
+  color: #475569; /* 默认灰色（未直播） */
+  letter-spacing: 0.05em;
+  transition: color 0.3s ease;
+}
+
+/* 当有直播时，JS 会添加 .active 类 */
+.live-indicator.active {
+  color: var(--red); /* 变成你定义的红色 */
+  text-shadow: 0 0 8px rgba(255, 59, 59, 0.3);
+}
+
+/* 覆盖你原有的 .chart-btn 样式（让它更精致） */
+.chart-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 14px;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.chart-btn:hover {
+  color: var(--green);
+  transform: scale(1.1); /* 悬停时稍微放大 */
+}
+
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000; backdrop-filter: blur(4px);
+}
+.modal-overlay.hidden { display: none; }
+
+/* Modal Box */
+.modal-content {
+    background: #1a1e22;
+    width: 600px; max-height: 85vh;
+    border-radius: 12px; border: 1px solid #2d3439;
+    position: relative; overflow-y: auto;
+    padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+}
+
+.close-btn {
+    position: absolute; top: 15px; right: 20px;
+    background: none; border: none; color: #6b7280;
+    font-size: 24px; cursor: pointer; z-index: 10;
+}
+
+/* 弹窗内部：比分头部 */
+.modal-header-box {
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 20px 0; border-bottom: 1px solid #2d3439; margin-bottom: 15px;
+}
+.modal-header-box .team { flex-direction: column; gap: 8px; }
+.modal-header-box .team-logo { width: 50px; height: 50px; }
+.modal-header-box .score-big { font-size: 32px; font-weight: 800; color: #fff; }
+
+/* 详情选项卡 */
+.modal-tabs {
+    display: flex; gap: 15px; border-bottom: 1px solid #2d3439;
+    margin-bottom: 15px; padding-bottom: 5px;
+}
+.modal-tab-item {
+    font-size: 11px; font-weight: 700; color: #6b7280;
+    text-transform: uppercase; cursor: pointer; padding: 5px 0;
+}
+.modal-tab-item.active { color: var(--green); border-bottom: 2px solid var(--green); }
+
+/* 事件列表样式 */
+.event-row {
+    display: grid; grid-template-columns: 40px 1fr 40px 1fr;
+    padding: 12px 0; border-bottom: 1px solid #252b31; align-items: center;
+    font-size: 12px;
+}
+.event-time { color: #6b7280; font-weight: 600; }
+.event-detail { color: #e2e8f0; font-weight: 500; }
+.event-icon { text-align: center; }
+
+/* 统计数据布局 */
+.stats-container {
+    padding: 10px 5px;
+}
+
+.stat-item {
+    margin-bottom: 20px;
+}
+
+.stat-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #cbd5e1;
+}
+
+.stat-bar-bg {
+    height: 6px;
+    background: #2d3439;
+    border-radius: 3px;
+    display: flex;
+    overflow: hidden;
+}
+
+.stat-bar-home {
+    height: 100%;
+    background: var(--green);
+    transition: width 0.6s ease-out;
+}
+
+.stat-bar-away {
+    height: 100%;
+    background: #475569; /* 客队用深灰色区分 */
+    transition: width 0.6s ease-out;
+}
+
+/* 优化统计条视觉：主队绿渐变，客队灰蓝渐变 */
+.stat-bar-home {
+    background: linear-gradient(90deg, #00c853, var(--green)) !important;
+    border-radius: 3px 0 0 3px;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+.stat-bar-away {
+    background: linear-gradient(90deg, #475569, #1e293b) !important;
+    border-radius: 0 3px 3px 0;
+}
+
+/* 统计条容器高度加深一点 */
+.stat-bar-bg {
+    height: 8px !important;
+    background: #0f172a !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* 弹窗动画 */
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-content {
+    animation: modalSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* 背景遮罩层加一点磨砂玻璃感 */
+.modal-overlay {
+    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.7) !important;
+}
