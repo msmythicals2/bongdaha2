@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1400" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bongdaha - Real-Time Football Livescore (Dark)</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +11,6 @@
 </head>
 
 <body>
-  <!-- ================= HEADER (KEEP) ================= -->
   <header class="site-header">
     <div class="max-w-[1400px] mx-auto flex items-center h-full px-10 justify-between">
       <div class="flex items-center gap-8">
@@ -20,9 +19,9 @@
         </h1>
 
         <nav class="flex gap-8 text-xs font-bold uppercase tracking-widest">
-  <a href="#" class="text-[#00e676]">Football</a>
-  <a href="#" class="text-gray-500 hover:text-white transition-colors">News</a>
-</nav>
+          <a href="#" class="text-[#00e676]">Football</a>
+          <a href="#" class="text-gray-500 hover:text-white transition-colors">News</a>
+        </nav>
       </div>
 
       <div class="flex items-center gap-6 text-sm">
@@ -34,20 +33,16 @@
     </div>
   </header>
 
-  <!-- ================= MAIN APP (KEEP) ================= -->
   <div class="app-container">
-    <!-- ===== LEFT SIDEBAR ===== -->
     <aside>
       <div class="sidebar-section mb-4">
-    <div class="flex items-center justify-between p-3 border-b border-[#2d3439] cursor-pointer group" id="toggle-competitions">
-        <h3 class="section-title !mb-0 text-white">World Competitions</h3>
-        <i class="fa-solid fa-chevron-right text-xs text-gray-500 group-hover:text-[#00e676] transition-transform" id="comp-chevron"></i>
-    </div>
-    <ul id="top-competitions" class="p-2 space-y-1">
-        </ul>
-    <ul id="all-competitions" class="hidden p-2 space-y-1 border-t border-[#2d3439]">
-        </ul>
-</div>
+        <div class="flex items-center justify-between p-3 border-b border-[#2d3439] cursor-pointer group" id="toggle-competitions">
+          <h3 class="section-title !mb-0 text-white">World Competitions</h3>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-500 group-hover:text-[#00e676] transition-transform" id="comp-chevron"></i>
+        </div>
+        <ul id="top-competitions" class="p-2 space-y-1"></ul>
+        <ul id="all-competitions" class="hidden p-2 space-y-1 border-t border-[#2d3439]"></ul>
+      </div>
 
       <div class="sidebar-section p-4">
         <h3 class="section-title">My Pinned Leagues</h3>
@@ -60,10 +55,8 @@
       </div>
     </aside>
 
-    <!-- ===== CENTER CONTENT ===== -->
     <main>
       <div class="main-card">
-        <!-- Tabs -->
         <div class="tabs-nav">
           <button class="tab-btn active" data-tab="all">ALL</button>
 
@@ -80,7 +73,6 @@
           </button>
         </div>
 
-        <!-- Date strip row (KEEP like your reference) -->
         <div class="date-row">
           <button id="btnPrevDay" class="date-btn" aria-label="Previous day">
             <i class="fa-solid fa-chevron-left text-xs"></i>
@@ -95,16 +87,13 @@
           <input id="datePicker" type="date" class="date-input" />
         </div>
 
-        <!-- Fixtures -->
         <div id="fixtures-container">
           <div class="loading-placeholder">Initialising Match Data...</div>
         </div>
       </div>
     </main>
 
-    <!-- ===== RIGHT SIDEBAR ===== -->
     <aside>
-      <!-- Featured Live -->
       <div class="sidebar-section overflow-hidden">
         <div class="featured-header">
           <span>Featured Live</span>
@@ -120,8 +109,20 @@
         <div id="live-carousel-content" class="featured-body"></div>
       </div>
 
-      <!-- News -->
-      <div class="sidebar-section">
+      <div id="match-detail-panel" class="sidebar-section mt-4 detail-panel hidden">
+          <div class="news-header detail-header">
+              <span class="section-title !m-0 !text-[#00e676]">Match Details</span>
+              <button id="close-right-panel" class="close-btn">&times;</button>
+          </div>
+          
+          <div id="modal-loader" class="loader-container" style="display:none;">
+              <div class="spinner"></div>
+          </div>
+
+          <div id="right-panel-body"></div>
+      </div>
+
+      <div class="sidebar-section mt-4">
         <div class="news-header">
           <h3 class="section-title m-0">Global Headlines</h3>
           <a href="#" class="news-link">View News</a>
@@ -131,7 +132,6 @@
     </aside>
   </div>
 
-  <!-- ================= FOOTER (KEEP like your reference) ================= -->
   <footer class="site-footer">
     <div class="footer-content">
       <div>

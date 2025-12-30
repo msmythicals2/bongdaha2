@@ -85,6 +85,28 @@ app.get("/api/news", async (req, res) => {
   }
 });
 
+// ===== Fixture Detail (REAL API) =====
+app.get("/api/fixture-detail", async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.json({});
+
+    const r = await axios.get(
+      `${BASE_URL}/fixtures`,
+      {
+        headers,
+        params: { id }
+      }
+    );
+
+    res.json(r.data || {});
+  } catch (err) {
+    console.error("fixture-detail error:", err.message);
+    res.json({});
+  }
+});
+
+// ✅ listen 必须在最后
 app.listen(PORT, () => {
   console.log("Bongdaha Server Running");
   console.log(`http://localhost:${PORT}`);

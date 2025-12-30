@@ -33,14 +33,17 @@ body{
 }
 
 /* Layout */
-.app-container{
-  width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 280px 1fr 300px;
-  gap: 15px;
-  padding: 15px 0;
-  flex: 1;
+.app-container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    /* 必须保留下面这几行 */
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    gap: 15px;
+    padding: 15px 0;
+    flex: 1;
 }
 
 /* Cards / sections */
@@ -294,13 +297,15 @@ body{
   100%{ transform: scale(.95); box-shadow: 0 0 0 0 rgba(255,59,59,0); }
 }
 
-.star-btn{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #556070;
+.star-btn {
+    font-size: 14px;
+    width: 36px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 .star-btn:hover{ color: #cbd5e1; }
 .star-btn.on{ color: #fbbf24; }
 
@@ -342,7 +347,7 @@ body{
 }
 
 .score.live {
-    color: var(--white)rtant; /* 直播中的比分显示为绿色 */
+    color: var(--green) !important; /* 修正了之前的拼写错误 */
 }
 
 .chart-btn{
@@ -750,8 +755,12 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 
 /* 弹窗内部：比分头部 */
 .modal-header-box {
-    display: flex; justify-content: space-around; align-items: center;
-    padding: 20px 0; border-bottom: 1px solid #2d3439; margin-bottom: 15px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 20px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
 }
 .modal-header-box .team { flex-direction: column; gap: 8px; }
 .modal-header-box .team-logo { width: 50px; height: 50px; }
@@ -770,9 +779,13 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 
 /* 事件列表样式 */
 .event-row {
-    display: grid; grid-template-columns: 40px 1fr 40px 1fr;
-    padding: 12px 0; border-bottom: 1px solid #252b31; align-items: center;
-    font-size: 12px;
+    display: grid;
+    grid-template-columns: 40px 1fr 30px 1fr; /* 保持四列布局但缩小间距 */
+    gap: 4px;
+    padding: 10px 5px;
+    border-bottom: 1px solid #252b31;
+    align-items: center;
+    font-size: 11px;
 }
 .event-time { color: #6b7280; font-weight: 600; }
 .event-detail { color: #e2e8f0; font-weight: 500; }
@@ -797,17 +810,16 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 }
 
 .stat-bar-bg {
-    height: 6px;
-    background: #2d3439;
-    border-radius: 3px;
-    display: flex;
+    height: 8px;
+    background: #0f172a;
+    border-radius: 4px;
     overflow: hidden;
+    display: flex;
+    margin-top: 5px;
 }
 
 .stat-bar-home {
-    height: 100%;
-    background: var(--green);
-    transition: width 0.6s ease-out;
+    background: linear-gradient(90deg, #00c853, var(--green));
 }
 
 .stat-bar-away {
@@ -850,3 +862,227 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     backdrop-filter: blur(6px);
     background: rgba(0, 0, 0, 0.7) !important;
 }
+
+/* ===================================================
+   SIDEBAR MATCH DETAIL PANEL OPTIMIZATION (窄屏优化)
+   =================================================== */
+
+/* 1. 容器内部排版 */
+#right-panel-body {
+    padding: 15px;
+    background: #1a1e22;
+}
+
+/* 2. 比分头部：在 300px 宽度下垂直排列或紧凑排列 */
+#right-panel-body .modal-header-box {
+    flex-direction: row; 
+    justify-content: space-between;
+    padding: 10px 0 20px 0;
+    border-bottom: 1px solid #2d3439;
+}
+
+#right-panel-body .team {
+    flex: 1;
+    flex-direction: column !important; /* Logo 在上，名字在下 */
+    gap: 5px;
+    text-align: center;
+}
+
+#right-panel-body .team-logo {
+    width: 32px !important; /* 缩小 Logo */
+    height: 32px !important;
+}
+
+#right-panel-body .team-name {
+    font-size: 11px !important;
+    max-width: 80px;
+    text-align: center;
+    white-space: normal; /* 允许换行 */
+    line-height: 1.2;
+}
+
+#right-panel-body .score-big {
+    font-size: 24px !important; /* 缩小比分数字 */
+    margin: 0 10px;
+    color: var(--green);
+}
+
+/* 3. Tab 切换按钮缩小 */
+#right-panel-body .modal-tabs {
+    justify-content: center;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+#right-panel-body .modal-tab-item {
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+/* 4. 统计条微调：让它更细，适合侧边栏 */
+#right-panel-body .stat-item {
+    margin-bottom: 15px;
+}
+
+#right-panel-body .stat-info {
+    font-size: 10px;
+    margin-bottom: 4px;
+}
+
+#right-panel-body .stat-bar-bg {
+    height: 5px !important; /* 更纤细 */
+}
+
+/* 5. 事件列表（Summary）紧凑化 */
+#right-panel-body .event-row {
+    grid-template-columns: 30px 1fr 25px; /* 侧边栏不需要左右对称，单列显示更好 */
+    padding: 8px 0;
+    font-size: 11px;
+}
+
+#right-panel-body .event-detail {
+    font-size: 11px;
+}
+
+/* 隐藏在侧边栏不需要的列（如果是双边布局的话） */
+#right-panel-body .event-row > div:nth-child(4) {
+    display: none; 
+}
+
+/* --- Match Detail Panel (Right Sidebar) --- */
+.detail-panel {
+    margin-top: 1rem;
+    background: #1a1e22;
+    border: 1px solid #2d3439;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+
+.detail-header {
+    background: #252b31;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.detail-title {
+    font-size: 11px;
+    color: #00e676;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* Tabs in Detail Panel */
+.modal-tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding: 10px 10px;
+    border-bottom: 1px solid #2d3439;
+    scrollbar-width: none; /* Firefox */
+}
+.modal-tabs::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.modal-tab-item {
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    white-space: nowrap;
+    padding-bottom: 5px;
+    transition: color 0.2s;
+}
+
+.modal-tab-item.active {
+    color: #00e676;
+    border-bottom: 2px solid #00e676;
+}
+
+/* Summary / Events Style */
+.events-container { padding: 5px 0; }
+.event-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid #252b31;
+    font-size: 11px;
+}
+.event-time { width: 35px; color: #94a3b8; font-family: monospace; }
+.event-detail { flex: 1; text-align: center; color: #e2e8f0; }
+.event-icon { width: 25px; text-align: center; }
+
+/* Stats Style */
+.stats-container { padding: 10px 5px; }
+.stat-item { margin-bottom: 15px; }
+.stat-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 6px;
+    color: #cbd5e1;
+}
+.stat-bar-bg {
+    height: 6px;
+    background: #2d3439;
+    display: flex;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.stat-bar-home { background: #00e676; height: 100%; transition: width 0.4s; }
+.stat-bar-away { background: #f8fafc; height: 100%; transition: width 0.4s; }
+
+/* Loader */
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+  .spinner {
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top: 3px solid var(--green);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    margin: 0 auto 10px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+#match-detail-panel {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.detail-panel.hidden {
+    display: none !important;
+}
+
+/* 右侧 aside 变成滚动容器 */
+.app-container > aside:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Detail panel 吸附在 Featured Live 下方 */
+#match-detail-panel {
+  position: sticky;
+  top: 80px;
+}
+
+
