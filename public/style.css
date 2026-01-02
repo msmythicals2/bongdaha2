@@ -350,15 +350,6 @@ body{
     color: var(--green) !important; /* 修正了之前的拼写错误 */
 }
 
-.chart-btn{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #3f4a54;
-  cursor: pointer;
-}
-.chart-btn:hover{ color: var(--green); }
-
 /* Right: Featured live */
 .featured-header{
   background: #64031b;
@@ -766,31 +757,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 .modal-header-box .team-logo { width: 50px; height: 50px; }
 .modal-header-box .score-big { font-size: 32px; font-weight: 800; color: #fff; }
 
-/* 详情选项卡 */
-.modal-tabs {
-    display: flex; gap: 15px; border-bottom: 1px solid #2d3439;
-    margin-bottom: 15px; padding-bottom: 5px;
-}
-.modal-tab-item {
-    font-size: 11px; font-weight: 700; color: #6b7280;
-    text-transform: uppercase; cursor: pointer; padding: 5px 0;
-}
-.modal-tab-item.active { color: var(--green); border-bottom: 2px solid var(--green); }
-
-/* 事件列表样式 */
-.event-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 30px 1fr; /* 保持四列布局但缩小间距 */
-    gap: 4px;
-    padding: 10px 5px;
-    border-bottom: 1px solid #252b31;
-    align-items: center;
-    font-size: 11px;
-}
-.event-time { color: #6b7280; font-weight: 600; }
-.event-detail { color: #e2e8f0; font-weight: 500; }
-.event-icon { text-align: center; }
-
 /* 统计数据布局 */
 .stats-container {
     padding: 10px 5px;
@@ -807,44 +773,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     font-weight: 600;
     margin-bottom: 6px;
     color: #cbd5e1;
-}
-
-.stat-bar-bg {
-    height: 8px;
-    background: #0f172a;
-    border-radius: 4px;
-    overflow: hidden;
-    display: flex;
-    margin-top: 5px;
-}
-
-.stat-bar-home {
-    background: linear-gradient(90deg, #00c853, var(--green));
-}
-
-.stat-bar-away {
-    height: 100%;
-    background: #475569; /* 客队用深灰色区分 */
-    transition: width 0.6s ease-out;
-}
-
-/* 优化统计条视觉：主队绿渐变，客队灰蓝渐变 */
-.stat-bar-home {
-    background: linear-gradient(90deg, #00c853, var(--green)) !important;
-    border-radius: 3px 0 0 3px;
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
-}
-
-.stat-bar-away {
-    background: linear-gradient(90deg, #475569, #1e293b) !important;
-    border-radius: 0 3px 3px 0;
-}
-
-/* 统计条容器高度加深一点 */
-.stat-bar-bg {
-    height: 8px !important;
-    background: #0f172a !important;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
 
 /* 弹窗动画 */
@@ -929,9 +857,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     margin-bottom: 4px;
 }
 
-#right-panel-body .stat-bar-bg {
-    height: 5px !important; /* 更纤细 */
-}
 
 /* 5. 事件列表（Summary）紧凑化 */
 #right-panel-body .event-row {
@@ -1009,19 +934,6 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     border-bottom: 2px solid #00e676;
 }
 
-/* Summary / Events Style */
-.events-container { padding: 5px 0; }
-.event-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 10px;
-    border-bottom: 1px solid #252b31;
-    font-size: 11px;
-}
-.event-time { width: 35px; color: #94a3b8; font-family: monospace; }
-.event-detail { flex: 1; text-align: center; color: #e2e8f0; }
-.event-icon { width: 25px; text-align: center; }
-
 /* Stats Style */
 .stats-container { padding: 10px 5px; }
 .stat-item { margin-bottom: 15px; }
@@ -1032,15 +944,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
     margin-bottom: 6px;
     color: #cbd5e1;
 }
-.stat-bar-bg {
-    height: 6px;
-    background: #2d3439;
-    display: flex;
-    border-radius: 3px;
-    overflow: hidden;
-}
-.stat-bar-home { background: #00e676; height: 100%; transition: width 0.4s; }
-.stat-bar-away { background: #f8fafc; height: 100%; transition: width 0.4s; }
+
 
 /* Loader */
 .loader-container {
@@ -1085,4 +989,230 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
   top: 80px;
 }
 
+
+/* ===== Summary: 2-column align + center line ===== */
+.events-container.events-2col{
+  position: relative;
+}
+
+.events-container.events-2col::before{
+  content:"";
+  position:absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 1px;
+  background: rgba(255,255,255,0.08);
+  transform: translateX(-0.5px);
+}
+
+.events-container.events-2col .event-row{
+  display: grid;
+  grid-template-columns: 44px 1fr 40px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 10px;
+  border-bottom: 1px solid #252b31;
+}
+
+.events-container.events-2col .event-time{
+  color: #94a3b8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  text-align: left;
+}
+
+.events-container.events-2col .event-side{
+  font-size: 12px;
+  color: #e2e8f0;
+  opacity: 0.95;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.events-container.events-2col .event-side.home{ text-align: right; padding-right: 6px; }
+.events-container.events-2col .event-side.away{ text-align: left;  padding-left: 6px; }
+
+.events-container.events-2col .event-mid{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width: 40px;
+}
+
+.events-container.events-2col .event-icon{
+  width: 22px;
+  height: 22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+
+/* ===== Stats: animate + leading highlight ===== */
+.stat-bar-bg{
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  overflow: hidden;
+  display:flex;
+}
+
+.stat-bar-home,
+.stat-bar-away{
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.stat-bar-home{ background: rgba(0,230,118,0.55); }
+.stat-bar-away{ background: rgba(148,163,184,0.35); }
+
+.stat-bar-home.lead{ background: rgba(0,230,118,0.9); }
+.stat-bar-away.lead{ background: rgba(148,163,184,0.55); }
+
+.stat-side.lead{
+  color: #e2e8f0;
+  font-weight: 800;
+}
+
+.stat-type{
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+
+/* ===============================
+   LINEUPS – REAL FOOTBALL PITCH
+   =============================== */
+
+.pitch {
+  position: relative;
+  width: 100%;
+  height: 580px;
+
+  background-color: #388e3c;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #388e3c,
+    #388e3c 40px,
+    #43a047 40px,
+    #43a047 80px
+  );
+
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 0 100px rgba(0,0,0,0.2);
+}
+
+/* 👉 中轴线（视觉锚点，关键） */
+.pitch::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,0.08);
+  transform: translateX(-0.5px);
+  pointer-events: none;
+}
+
+/* pitch markings */
+.pitch-markings > div {
+  position: absolute;
+  border: 2px solid rgba(255,255,255,0.4);
+  pointer-events: none;
+}
+
+.half-line {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  border-bottom: 2px solid rgba(255,255,255,0.4);
+}
+
+.center-circle {
+  top: 50%;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.penalty-area {
+  left: 15%;
+  width: 70%;
+  height: 16%;
+}
+.penalty-area.top { top: 0; border-top: none; }
+.penalty-area.bottom { bottom: 0; border-bottom: none; }
+
+.goal-area {
+  left: 30%;
+  width: 40%;
+  height: 6%;
+}
+.goal-area.top { top: 0; border-top: none; }
+.goal-area.bottom { bottom: 0; border-bottom: none; }
+
+/* players */
+.player-dot {
+  position: absolute;
+  transform: translate(-50%, -50%); /* 确保点的几何中心对准 left/top */
+  width: 80px; /* 适当加宽，给名字留空间，防止溢出导致的视觉偏移 */
+  display: flex; /* 开启 Flex */
+  flex-direction: column;
+  align-items: center; /* 强制所有子元素（球衣、名字）水平居中 */
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.player-dot .shirt {
+  width: 28px; /* 稍微加大一点，视觉更饱满 */
+  height: 28px;
+  border-radius: 50%;
+  background: #111827;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  /* 确保球衣圆点自己也是绝对圆心对齐 */
+  flex-shrink: 0; 
+}
+
+.home-p .shirt { background: #1e88e5; }
+.away-p .shirt { background: #e53935; }
+
+.player-dot .name {
+  display: block; /* 改为 block 配合 width: 100% */
+  width: 100%;
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center; /* 强制文字居中 */
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0,0,0,1);
+}
+
+/* team labels */
+.team-label {
+  position: absolute;
+  left: 15px;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.8);
+  text-transform: uppercase;
+  z-index: 2;
+}
+.away-label { top: 12px; }
+.home-label { bottom: 12px; }
 

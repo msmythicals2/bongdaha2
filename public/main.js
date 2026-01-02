@@ -12,6 +12,11 @@ const state = {
   selectedLeagueId: null,
 };
 
+// Match Detail panel runtime state
+state.detailMatchId = null;
+state.detailRefreshTimer = null;
+
+
 // 1. 定义 COMPETITIONS 固定联赛数据
 const COMPETITION_DATA = [
   { id: 39, name: "Premier League", country: "England", logo: "https://media.api-sports.io/football/leagues/39.png" },
@@ -274,8 +279,11 @@ async function openMatchDetails(matchId) {
     return;
   }
 
-  panel.classList.remove("hidden");
-  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+panel.classList.remove("hidden");
+panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+state.detailMatchId = matchId;
+startDetailAutoRefresh();
 
   body.innerHTML = "";
   loader.style.display = "flex";
@@ -309,9 +317,11 @@ async function openMatchDetails(matchId) {
       </div>
 
       <div class="modal-tabs" id="right-panel-tabs">
-        <div class="modal-tab-item active" data-target="summary">Summary</div>
-        <div class="modal-tab-item" data-target="stats">Stats</div>
-      </div>
+  <div class="modal-tab-item active" data-target="summary">Summary</div>
+  <div class="modal-tab-item" data-target="stats">Stats</div>
+  <div class="modal-tab-item" data-target="lineups">Lineups</div>
+</div>
+
 
       <div id="right-panel-tab-content">
         ${renderSummary(match)}
@@ -331,8 +341,10 @@ async function openMatchDetails(matchId) {
         const target = tab.dataset.target;
         const content = document.getElementById("right-panel-tab-content");
 
-        if (target === "summary") content.innerHTML = renderSummary(match);
-        else if (target === "stats") content.innerHTML = renderStats(match);
+       if (target === "summary") content.innerHTML = renderSummary(match);
+       else if (target === "stats") content.innerHTML = renderStats(match);
+       else if (target === "lineups") content.innerHTML = renderLineups(match);
+
       });
 
   } catch (err) {
@@ -343,30 +355,93 @@ async function openMatchDetails(matchId) {
 }
 
 
-// ---------- Summary ----------
+function stopDetailAutoRefresh() {
+  if (state.detailRefreshTimer) {
+    clearInterval(state.detailRefreshTimer);
+    state.detailRefreshTimer = null;
+  }
+}
+
+function startDetailAutoRefresh() {
+  stopDetailAutoRefresh();
+
+  state.detailRefreshTimer = setInterval(async () => {
+    const panel = document.getElementById("match-detail-panel");
+    if (!panel || panel.classList.contains("hidden")) return;
+    if (!state.detailMatchId) return;
+
+    const result = await apiGetJSON(`/api/fixture-detail?id=${state.detailMatchId}`);
+    const match = result?.response?.[0];
+    if (!match) return;
+
+    // 只刷新内容，不关 panel
+    const content = document.getElementById("right-panel-tab-content");
+    const tabs = document.getElementById("right-panel-tabs");
+    if (!content || !tabs) return;
+
+    const active = tabs.querySelector(".modal-tab-item.active")?.dataset?.target || "summary";
+    if (active === "summary") content.innerHTML = renderSummary(match);
+    else if (active === "stats") content.innerHTML = renderStats(match);
+    else if (active === "lineups") content.innerHTML = renderLineups(match);
+  }, 15000); // 15秒一次（你配额多可以更频密）
+}
+
+
 function renderSummary(match) {
-  if (!match.events?.length) {
+  if (!Array.isArray(match.events) || !match.events.length) {
     return `<div class="loading-placeholder">No events</div>`;
   }
 
-  return `
-    <div class="events-container">
-      ${match.events.map(ev => {
-        const isHome = ev.team.id === match.teams.home.id;
-        let icon = "⚽";
-        if (ev.type === "Card") icon = ev.detail === "Yellow Card" ? "🟨" : "🟥";
-        if (ev.type === "subst") icon = "🔄";
+  const rows = match.events
+    .map(ev => {
+      const isHome = ev.team?.id === match.teams.home.id;
 
-        return `
-          <div class="event-row">
-            <div class="event-time">${ev.time.elapsed}'</div>
-            <div class="event-detail">${isHome ? ev.player.name || "" : ""}</div>
-            <div class="event-icon">${icon}</div>
-            <div class="event-detail">${!isHome ? ev.player.name || "" : ""}</div>
-          </div>`;
-      }).join("")}
-    </div>`;
+     const name =
+  ev.player?.name ||
+  ev.assist?.name ||
+  ev.player_in?.name ||
+  ev.player_out?.name ||
+  "";
+
+      if (!name) return null; // 彻底过滤“空白行”
+
+      let icon = "⚽";
+      if (ev.type === "Card") icon = ev.detail === "Yellow Card" ? "🟨" : "🟥";
+      if (ev.type === "subst") icon = "🔄";
+
+      const t = ev.time?.elapsed != null ? `${ev.time.elapsed}'` : "";
+
+      return `
+        <div class="event-row">
+          <div class="event-time">${t}</div>
+
+          <div class="event-side home ${isHome ? "show" : ""}">
+            ${isHome ? escapeHtml(name) : ""}
+          </div>
+
+          <div class="event-mid">
+            <span class="event-icon">${icon}</span>
+          </div>
+
+          <div class="event-side away ${!isHome ? "show" : ""}">
+            ${!isHome ? escapeHtml(name) : ""}
+          </div>
+        </div>
+      `;
+    })
+    .filter(Boolean);
+
+  if (!rows.length) {
+    return `<div class="loading-placeholder">No visible events</div>`;
+  }
+
+  return `
+    <div class="events-container events-2col">
+      ${rows.join("")}
+    </div>
+  `;
 }
+
 
 // ---------- Stats ----------
 function renderStats(match) {
@@ -374,36 +449,154 @@ function renderStats(match) {
     return `<div class="loading-placeholder">No stats</div>`;
   }
 
-  const homeStats = match.statistics[0].statistics;
-  const awayStats = match.statistics[1].statistics;
-  const types = ["Ball Possession", "Total Shots", "Shots on Goal", "Corner Kicks"];
+  const homeStats = match.statistics[0]?.statistics || [];
+  const awayStats = match.statistics[1]?.statistics || [];
+
+  const types = [
+    "Ball Possession",
+    "Total Shots",
+    "Shots on Goal",
+    "Corner Kicks"
+  ];
+
+  const getValNum = (v) => {
+    if (v == null) return 0;
+    if (typeof v === "number") return v;
+    if (typeof v === "string") return parseInt(v.replace("%",""), 10) || 0;
+    return 0;
+  };
 
   return `
     <div class="stats-container">
       ${types.map(type => {
-        const h = homeStats.find(s => s.type === type)?.value || 0;
-        const a = awayStats.find(s => s.type === type)?.value || 0;
-        const hNum = parseInt(h) || 0;
-        const aNum = parseInt(a) || 0;
-        const total = hNum + aNum || 1;
-        const hWidth = (hNum / total) * 100;
+        const hRaw = homeStats.find(s => s.type === type)?.value ?? 0;
+        const aRaw = awayStats.find(s => s.type === type)?.value ?? 0;
+
+        const h = getValNum(hRaw);
+        const a = getValNum(aRaw);
+
+        const total = (h + a) || 1;
+        const hPct = Math.round((h / total) * 100);
+        const aPct = 100 - hPct;
+
+        const homeLead = h > a;
+        const awayLead = a > h;
 
         return `
           <div class="stat-item">
             <div class="stat-info">
-              <span>${h}</span>
-              <span>${type}</span>
-              <span>${a}</span>
+              <span class="stat-side ${homeLead ? "lead" : ""}">${escapeHtml(String(hRaw))}</span>
+              <span class="stat-type">${escapeHtml(type)}</span>
+              <span class="stat-side ${awayLead ? "lead" : ""}">${escapeHtml(String(aRaw))}</span>
             </div>
+
             <div class="stat-bar-bg">
-              <div class="stat-bar-home" style="width:${hWidth}%"></div>
-              <div class="stat-bar-away" style="width:${100 - hWidth}%"></div>
+              <div class="stat-bar-home ${homeLead ? "lead" : ""}" style="width:${hPct}%"></div>
+              <div class="stat-bar-away ${awayLead ? "lead" : ""}" style="width:${aPct}%"></div>
             </div>
-          </div>`;
+          </div>
+        `;
       }).join("")}
-    </div>`;
+    </div>
+  `;
 }
 
+// ---------- Lineups (FINAL CLEAN VERSION) ----------
+function renderLineups(match) {
+  const ROW_GAP = 8.5;   // 每一排垂直间距（%）
+  const LEFT_MIN = 12;   // 左边界（%）
+  const LEFT_MAX = 88;   // 右边界（%）
+
+  const lineups = match.lineups;
+  if (!Array.isArray(lineups) || lineups.length < 2) {
+    return `<div class="loading-placeholder">No lineups</div>`;
+  }
+
+  const home =
+    lineups.find(x => x.team?.id === match.teams.home.id) || lineups[0];
+  const away =
+    lineups.find(x => x.team?.id === match.teams.away.id) || lineups[1];
+
+  const renderSide = (team, isAway) => {
+    const players = team.startXI || [];
+    if (!players.length) return "";
+
+    // ① 按 row 分组
+    const rows = {};
+    players.forEach(p => {
+      const grid = p.player?.grid;
+      if (!grid) return;
+
+      const [row, col] = grid.split(":").map(Number);
+      if (!rows[row]) rows[row] = [];
+      rows[row].push({ player: p.player, col });
+    });
+
+    // ② 行内按 col 排序（左 → 右）
+    Object.values(rows).forEach(arr => {
+      arr.sort((a, b) => a.col - b.col);
+    });
+
+    // ③ 渲染
+    return Object.entries(rows).map(([rowStr, rowPlayers]) => {
+      const row = Number(rowStr);
+      const count = rowPlayers.length;
+
+      const span = LEFT_MAX - LEFT_MIN;
+      const step = (count <= 1) ? 0 : span / (count - 1);
+
+      return rowPlayers.map((item, i) => {
+        const left = (count <= 1)
+          ? 50
+          : LEFT_MIN + step * i;
+
+        const top = isAway
+          ? row * ROW_GAP
+          : 100 - row * ROW_GAP;
+
+        const pl = item.player;
+
+        return `
+          <div class="player-dot ${isAway ? "away-p" : "home-p"}"
+               style="left:${left}%; top:${top}%;">
+
+            <div class="shirt">${pl.number ?? ""}</div>
+            <div class="name">
+              ${escapeHtml(pl.name.split(" ").slice(-1)[0])}
+            </div>
+
+          </div>
+        `;
+      }).join("");
+    }).join("");
+  };
+
+  return `
+    <div class="lineup-container">
+      <div class="pitch">
+        <div class="pitch-markings">
+          <div class="half-line"></div>
+          <div class="center-circle"></div>
+          <div class="penalty-area top"></div>
+          <div class="penalty-area bottom"></div>
+          <div class="goal-area top"></div>
+          <div class="goal-area bottom"></div>
+        </div>
+
+        <div class="team-label away-label">
+          ${escapeHtml(away.team.name)} · ${away.formation || ""}
+        </div>
+
+        <div class="team-label home-label">
+          ${escapeHtml(home.team.name)} · ${home.formation || ""}
+        </div>
+
+        ${renderSide(away, true)}
+        ${renderSide(home, false)}
+      </div>
+    </div>
+  `;
+}
 
 // ---------- Refresh & Events ----------
 async function refreshAll() {
@@ -456,9 +649,12 @@ function bindEvents() {
   }
 
   // Right Panel Close Button
-  document.getElementById("close-right-panel")?.addEventListener("click", () => {
-    document.getElementById("match-detail-panel").classList.add("hidden");
-  });
+ document.getElementById("close-right-panel")?.addEventListener("click", () => {
+  document.getElementById("match-detail-panel").classList.add("hidden");
+  state.detailMatchId = null;
+  stopDetailAutoRefresh();
+});
+
 
   // Date Nav
   const prev = document.getElementById("btnPrevDay");
